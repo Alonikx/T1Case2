@@ -70,22 +70,9 @@
                 <table id="myTable">
                     <thead id="thead">
                         <tr id="header-row">
-                            <th style="border: none; background-color: #ffffff;"></th>
-                            <th>Имя</th>
-                            <th>Возраст</th>
                         </tr>
                     </thead>
                     <tbody id="tbody">
-                        <tr>
-                            <td><button onclick="deleteRow(this)">Удалить строку</button>
-                            </td>
-                            <td>
-
-                            </td>
-                            <td>
-
-                            </td>
-                        </tr>
                     </tbody>
                 </table>
 
@@ -94,7 +81,6 @@
         <div>
             <button onclick="addRow()">Добавить строку</button>
             <button onclick="addColumn()">Добавить столбец</button>
-            <button onclick="ajax()">Получить данные</button>
             <button onclick="getDataFromInputs()">Получить инпуты</button>
         </div>
 
@@ -152,13 +138,13 @@
             });
         };
         try {
-            coll.send();
             date.send();
+            coll.send();
         } catch (e) {
             console.log(e);
         }
     }
-
+    ajax();
     function getDataFromInputs() {
         const tbody = document.getElementById('tbody');
         const rows = tbody.children;
