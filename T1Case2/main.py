@@ -56,6 +56,14 @@ async def receive_filtered_lists(data: DataModel):
     else:
         raise HTTPException(status_code=403, detail="data is the same")
     
+
+@app.post("/delete_filter")
+async def delete_filter():
+    file_path = 'json_files/data_filtered.json'
+    if os.path.exists(file_path):
+        os.remove(file_path)
+        return {'filter deleted'}
+    
 @app.get("/indexes")
 async def get_table():
     cols, vals = read_json()
