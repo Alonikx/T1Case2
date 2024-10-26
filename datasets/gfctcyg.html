@@ -1,0 +1,29 @@
+<script>
+    function ajax() {
+        const coll = new XMLHttpRequest();
+        const date = new XMLHttpRequest();
+        coll.open('GET', 'https://zzzzz.serveo.net/indexes', true);
+        date.open('GET', 'https://zzzzz.serveo.net/values', true);
+        coll.onload = function () {
+            const data = JSON.parse(coll.responseText);
+            const tbody = document.getElementById('tbody');
+            tbody.innerHTML = '';
+            const headerRow = document.getElementById('header-row');
+            headerRow.innerHTML = '';
+            const emptyCell = document.createElement('th');
+            emptyCell.style.border = 'none';
+            emptyCell.style.background = '#ffffff';
+            headerRow.appendChild(emptyCell);
+            data.forEach(function (item) {
+                const cell = document.createElement('th');
+                cell.innerHTML = `${item} <button style="background:none;border:none" onclick="deleteColumn(this)"><img src="./close.svg" width="16px" heigth="16px"/></button>`;
+                headerRow.appendChild(cell);
+            });
+        };
+        try {
+            xhr.send();
+        } catch (e) {
+            console.log(e);
+        }
+    }
+</script>
