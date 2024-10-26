@@ -5,6 +5,9 @@ import pandas as pd
 from typing import List, Any, Union
 from fastapi.middleware.cors import CORSMiddleware
 from data_analyze import write_json, read_json, write_json_filter
+from fastapi.responses import HTMLResponse
+import os
+
 app = FastAPI()
 
 app.add_middleware(
@@ -24,10 +27,6 @@ app.add_middleware(
 #         return JSONResponse(content={"message": "File uploaded successfully!"}, status_code=200)
 #     raise HTTPException(status_code=400, detail="Invalid file format!")
 
-class Filter(BaseModel):
-    filter: str
-    val: Union[int, str] 
-
 
 class DataModel(BaseModel):
     columns: List[str]
@@ -46,7 +45,7 @@ async def receive_lists(data: DataModel):
         raise HTTPException(status_code=403, detail="data is the same")
 
 @app.post("/filter")
-async def receive_lists(data: DataModel):
+async def receive_filtered_lists(data: DataModel):
     cols, vals = read_json()
     columns = data.columns
     values = data.values
@@ -77,7 +76,14 @@ async def get_filterd_values():
 
     return JSONResponse(content=grouped_dict)
 
+# @app.get("/graph", response_class=HTMLResponse)
+# async def get_notebook():
+#     # Замените на путь к вашему .ipynb файлу
+#     notebook_path = "data-analyze2.ipynb"
+    # os.system(f"voila {notebook_path} --no-browser --port 5000 &")
+    # return {"message": "Notebook is running at http://127.0.0.1:5000"}
+
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="127.0.0.1", port=8000)
+    uvicorn.run(app, host="127.0.0.1", port=5000)
 
