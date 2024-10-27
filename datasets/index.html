@@ -476,14 +476,11 @@
             var int = 0;
             data.forEach(function (item) {
                 const cell = document.createElement('th');
-                cell.innerHTML = "";
+                cell.innerHTML = `<button style="background:none;border:none" onclick="deleteColumn(this)"><img src="./close.svg" width="16px" heigth="16px"/></button><input type="text" class="${int}" placeholder="Поиск имен.." form="false">`;
                 headerRow.appendChild(cell);
-                const cells = document.createElement('td');
-                cells.innerHTML = `<button style="background:none;border:none" onclick="deleteColumn(this)"><img src="./close.svg" width="16px" heigth="16px"/></button><input type="text" class="ints" placeholder="Поиск имен.." form="false">`;
-                cell.appendChild(cells);
                 const input = document.createElement('input');
                 input.type = 'text';
-                input.className = `input`; // передача класса через метод classList
+                input.className = `input`;
                 input.value = item;
                 cell.appendChild(input);
                 int++;
