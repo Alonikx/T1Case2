@@ -171,371 +171,13 @@
         </div>
     </div>
 </body>
-<script>
-    function stolb() {
-        const table = document.getElementById('myTable');
-        const tbody = table.tBodies[0];
-        const rows = tbody.rows;
-        const columns = [];
-
-        for (let i = 0; i < rows[0].cells.length - 1; i++) {
-            columns.push([]);
-        }
-
-        for (let i = 0; i < rows.length; i++) {
-            const input = rows[i].getElementsByTagName('input');
-            for (let j = 0; j < input.length; j++) {
-                columns[j].push(input[j].value); // Получаем значения из инпутов
-            }
-        }
-
-        const columnSelect = document.getElementById('column-select');
-        const selectedColumn = columnSelect.value;
-
-        // Удаляем предыдущую диаграмму
-        const ctx = document.getElementById('myChartstolb').getContext('2d');
-        if (window.chart) {
-            window.chart.destroy();
-        }
-
-        // Создаем диаграмму
-        window.chart = new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: [...new Set(columns[selectedColumn - 1])],
-                datasets: [{
-                    label: 'Столбчатая диаграмма',
-                    data: [...new Set(columns[selectedColumn - 1])].map((value) => {
-                        return columns[selectedColumn - 1].filter((item) => item === value).length;
-                    }),
-                    backgroundColor: [
-                        'rgba(255, 99, 132, 0.2)',
-                        'rgba(54, 162, 235, 0.2)',
-                        'rgba(255, 206, 86, 0.2)',
-                        'rgba(75, 192, 192, 0.2)',
-                        'rgba(153, 102, 255, 0.2)',
-                        'rgba(255, 159, 64, 0.2)'
-                    ],
-                    borderColor: [
-                        'rgba(255, 99, 132, 1)',
-                        'rgba(54, 162, 235, 1)',
-                        'rgba(255, 206, 86, 1)',
-                        'rgba(75, 192, 192, 1)',
-                        'rgba(153, 102, 255, 1)',
-                        'rgba(255, 159, 64, 1)'
-                    ],
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                scales: {
-                    x: {
-                        ticks: {
-                            maxRotation: 70,
-                            minRotation: 70
-                        }
-                    },
-                    y: {
-                        beginAtZero: true
-                    }
-                }
-            }
-        });
-    }
-
-
-
-
-    function krug() {
-        const table = document.getElementById('myTable');
-        const tbody = table.tBodies[0];
-        const rows = tbody.rows;
-        const columns = [];
-
-        for (let i = 0; i < rows[0].cells.length - 1; i++) {
-            columns.push([]);
-        }
-
-        for (let i = 0; i < rows.length; i++) {
-            const input = rows[i].getElementsByTagName('input');
-            for (let j = 0; j < input.length; j++) {
-                columns[j].push(input[j].value); // Получаем значения из инпутов
-            }
-        }
-
-        const columnSelect = document.getElementById('column-select');
-        const selectedColumn = columnSelect.value;
-
-        // Удаляем предыдущую диаграмму
-        const ctx = document.getElementById('myChartkrug').getContext('2d');
-        if (window.chart) {
-            window.chart.destroy();
-        }
-
-        // Создаем диаграмму
-        window.chart = new Chart(ctx, {
-            type: 'pie',
-            data: {
-                labels: [...new Set(columns[selectedColumn - 1])],
-                datasets: [{
-                    label: 'Круговая диаграмма',
-                    data: [...new Set(columns[selectedColumn - 1])].map((value) => {
-                        return columns[selectedColumn - 1].filter((item) => item === value).length;
-                    }),
-                    backgroundColor: [
-                        'rgba(255, 99, 132, 0.2)',
-                        'rgba(54, 162, 235, 0.2)',
-                        'rgba(255, 206, 86, 0.2)',
-                        'rgba(75, 192, 192, 0.2)',
-                        'rgba(153, 102, 255, 0.2)',
-                        'rgba(255, 159, 64, 0.2)'
-                    ],
-                    borderColor: [
-                        'rgba(255, 99, 132, 1)',
-                        'rgba(54, 162, 235, 1)',
-                        'rgba(255, 206, 86, 1)',
-                        'rgba(75, 192, 192, 1)',
-                        'rgba(153, 102, 255, 1)',
-                        'rgba(255, 159, 64, 1)'
-                    ],
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                scales: {
-                    y: {
-                        beginAtZero: true
-                    }
-                }
-            }
-        });
-    }
-    function gisto() {
-        const table = document.getElementById('myTable');
-        const tbody = table.tBodies[0];
-        const rows = tbody.rows;
-        const columns = [];
-
-        for (let i = 0; i < rows[0].cells.length - 1; i++) {
-            columns.push([]);
-        }
-
-        for (let i = 0; i < rows.length; i++) {
-            const input = rows[i].getElementsByTagName('input');
-            for (let j = 0; j < input.length; j++) {
-                columns[j].push(input[j].value); // Получаем значения из инпутов
-            }
-        }
-
-        const columnSelect = document.getElementById('column-select');
-        const selectedColumn = columnSelect.value;
-
-        // Удаляем предыдущую гистограмму
-        const ctx = document.getElementById('myChart').getContext('2d');
-        if (window.chart) {
-            window.chart.destroy();
-        }
-
-        // Создаем гистограмму
-        window.chart = new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: [...new Set(columns[selectedColumn - 1])],
-                datasets: [{
-                    label: 'Гистограмма',
-                    data: [...new Set(columns[selectedColumn - 1])].map((value) => {
-                        return columns[selectedColumn - 1].filter((item) => item === value).length;
-                    }),
-                    backgroundColor: [
-                        'rgba(255, 99, 132, 0.2)',
-                        'rgba(54, 162, 235, 0.2)',
-                        'rgba(255, 206, 86, 0.2)',
-                        'rgba(75, 192, 192, 0.2)',
-                        'rgba(153, 102, 255, 0.2)',
-                        'rgba(255, 159, 64, 0.2)'
-                    ],
-                    borderColor: [
-                        'rgba(255, 99, 132, 1)',
-                        'rgba(54, 162, 235, 1)',
-                        'rgba(255, 206, 86, 1)',
-                        'rgba(75, 192, 192, 1)',
-                        'rgba(153, 102, 255, 1)',
-                        'rgba(255, 159, 64, 1)'
-                    ],
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                scales: {
-                    x: {
-                        ticks: {
-                            maxRotation: 70,
-                            minRotation: 70
-                        }
-                    },
-                    y: {
-                        beginAtZero: true
-                    }
-                }
-            }
-        });
-    }
-
-</script>
-<script>
-    let scriptEnabled = false;
-    function fixed_block() {
-        console.log(scriptEnabled);
-        scriptEnabled = !scriptEnabled;
-        if (scriptEnabled) {
-            const content_item = document.querySelector('.content_item');
-
-            content_item.addEventListener('mousedown', (e) => {
-                const rect = content_item.getBoundingClientRect();
-                const x = e.clientX - rect.left;
-                const y = e.clientY - rect.top;
-
-                const moveHandler = (e) => {
-                    const newX = e.clientX - x;
-                    const newY = e.clientY - y;
-                    content_item.style.top = `${newY}px`;
-                    content_item.style.left = `${newX}px`;
-                };
-
-                const upHandler = () => {
-                    document.removeEventListener('mousemove', moveHandler);
-                    document.removeEventListener('mouseup', upHandler);
-                };
-
-                document.addEventListener('mousemove', moveHandler);
-                document.addEventListener('mouseup', upHandler);
-            });
-            const content_diagramm = document.querySelector('.content_diagramm');
-
-            content_diagramm.addEventListener('mousedown', (e) => {
-                const rect = content_diagramm.getBoundingClientRect();
-                const x = e.clientX - rect.left;
-                const y = e.clientY - rect.top;
-
-                const moveHandler = (e) => {
-                    const newX = e.clientX - x;
-                    const newY = e.clientY - y;
-                    content_diagramm.style.top = `${newY}px`;
-                    content_diagramm.style.left = `${newX}px`;
-                };
-
-                const upHandler = () => {
-                    document.removeEventListener('mousemove', moveHandler);
-                    document.removeEventListener('mouseup', upHandler);
-                };
-
-                document.addEventListener('mousemove', moveHandler);
-                document.addEventListener('mouseup', upHandler);
-            });
-            const resizeHandles = document.querySelector('.rigth-handle');
-            let isResizings = false;
-            let startXs = 0;
-            let startYs = 0;
-            let startWidths = 0;
-            let startHeights = 0;
-
-            resizeHandles.addEventListener('mousedown', (e) => {
-                isResizings = true;
-                startXs = e.clientX;
-                startYs = e.clientY;
-                startWidths = content_diagramm.offsetWidth;
-                startHeights = content_diagramm.offsetHeight;
-            });
-
-            document.addEventListener('mousemove', (e) => {
-                if (isResizings) {
-                    const newWidth = startWidths + (e.clientX - startXs);
-                    const newHeight = startHeights + (startYs - e.clientY);
-                    content_diagramm.style.width = `${newWidth}px`;
-                    content_diagramm.style.height = `${newHeight}px`;
-                }
-            });
-
-            document.addEventListener('mouseup', () => {
-                isResizings = false;
-            });
-
-            const content = document.querySelector('.content');
-
-            content.addEventListener('mousedown', (e) => {
-                const rect = content.getBoundingClientRect();
-                const x = e.clientX - rect.left;
-                const y = e.clientY - rect.top;
-
-                const moveHandler = (e) => {
-                    const newX = e.clientX - x;
-                    const newY = e.clientY - y;
-                    content.style.top = `${newY}px`;
-                    content.style.left = `${newX}px`;
-                };
-
-                const upHandler = () => {
-                    document.removeEventListener('mousemove', moveHandler);
-                    document.removeEventListener('mouseup', upHandler);
-                };
-
-                document.addEventListener('mousemove', moveHandler);
-                document.addEventListener('mouseup', upHandler);
-            });
-            const resizeHandle = document.querySelector('.left-handle');
-            let isResizing = false;
-            let startX = 0;
-            let startY = 0;
-            let startWidth = 0;
-            let startHeight = 0;
-
-            resizeHandle.addEventListener('mousedown', (e) => {
-                isResizing = true;
-                startX = e.clientX;
-                startY = e.clientY;
-                startWidth = content.offsetWidth;
-                startHeight = content.offsetHeight;
-            });
-
-            document.addEventListener('mousemove', (e) => {
-                if (isResizing) {
-                    const newWidth = startWidth + (startX - e.clientX);
-                    const newHeight = startHeight + (startY - e.clientY);
-                    content.style.width = `${newWidth}px`;
-                    content.style.height = `${newHeight}px`;
-                }
-            });
-
-            document.addEventListener('mouseup', () => {
-                isResizing = false;
-            });
-        } else {
-            const content_item = document.querySelector('.content_item');
-            content_item.removeEventListener('mousedown', () => { });
-
-            const content_diagramm = document.querySelector('.content_diagramm');
-            content_diagramm.removeEventListener('mousedown', () => { });
-
-            const resizeHandles = document.querySelector('.rigth-handle');
-            resizeHandles.removeEventListener('mousedown', () => { });
-
-            const content = document.querySelector('.content');
-            content.removeEventListener('mousedown', () => { });
-
-            const resizeHandle = document.querySelector('.left-handle');
-            resizeHandle.removeEventListener('mousedown', () => { });
-
-            document.removeEventListener('mousemove', () => { });
-            document.removeEventListener('mouseup', () => { });
-        }
-    }
-
-</script>
+<script type="text/javascript" src="diagramms.js"></script>
+<script type="text/javascript" src="item_page.js"></script>
 <script type="text/javascript" src="main.js"></script>
 <script>
     function ajax() {
         const coll = new XMLHttpRequest();
-        coll.open('GET', 'https://zzzzz.serveo.net/indexes');
+        coll.open('GET', 'indexes.php');
         coll.onload = function () {
             const data = JSON.parse(coll.responseText);
             const tbody = document.getElementById('tbody');
@@ -553,7 +195,7 @@
                 headerRow.appendChild(cell);
                 const input = document.createElement('input');
                 input.type = 'text';
-                input.className = `input`; // передача класса через метод classList
+                input.className = `input`;
                 input.value = item;
                 cell.appendChild(input);
                 int++;
@@ -568,7 +210,7 @@
     ajax();
     function ajax_value() {
         const date = new XMLHttpRequest();
-        date.open('GET', 'https://zzzzz.serveo.net/values');
+        date.open('GET', 'values.php');
         date.onload = function () {
             const dates = JSON.parse(date.responseText);
             const tbody = document.getElementById('tbody');
@@ -607,10 +249,9 @@
             const rowData = [];
 
             for (let j = 0; j < inputs.length; j++) {
-                rowData.push(inputs[j].value); // Получаем значения из инпутов
+                rowData.push(inputs[j].value);
             }
 
-            dataList.push(rowData); // Добавляем данные строки в общий список
         }
         const thead = document.getElementById('thead');
         const row = thead.children;
@@ -622,7 +263,7 @@
             const input = row[i].getElementsByClassName('input');
             for (let j = 0; j < input.length; j++) {
                 const value = input[j].value;
-                rowDat.push(value); // Получаем значения из инпутов
+                rowDat.push(value);
                 const option = document.createElement('option');
                 option.value = j + 1;
                 option.textContent = value;
@@ -661,16 +302,16 @@
         for (let i = 0; i < rows_filter.length; i++) {
             const row = rows_filter[i];
             console.log(row.style.display != 'none')
-            if (row.style.display != 'none') { // Проверяем, пустой ли стиль строки
+            if (row.style.display != 'none') {
                 const inputs_filter = row.getElementsByTagName('input');
                 const rowData_filter = [];
 
                 for (let j = 0; j < inputs_filter.length; j++) {
-                    rowData_filter.push(inputs_filter[j].value); // Получаем значения из инпутов
+                    rowData_filter.push(inputs_filter[j].value);
                 }
 
-                if (rowData_filter.length > 0) { // Проверяем, есть ли данные в строке
-                    dataList_filter.push(rowData_filter); // Добавляем данные строки в общий список
+                if (rowData_filter.length > 0) {
+                    dataList_filter.push(rowData_filter);
                 }
             }
         }
@@ -681,7 +322,7 @@
         for (let i = 0; i < row_filter.length; i++) {
             const input_filter = row_filter[i].getElementsByClassName('input');
             for (let j = 0; j < input_filter.length; j++) {
-                rowDat_filter.push(input_filter[j].value); // Получаем значения из инпутов
+                rowDat_filter.push(input_filter[j].value);
             }
         }
         $.ajax({
@@ -746,19 +387,21 @@
         getDataFromFilters();
     });
     function upload() {
-        var input_file = document.getElementById("upload_file");
-        console.log(input_file)
+        var formData = new FormData(document.getElementById('upload_file'));
         $.ajax({
             type: "POST",
-            url: '',
-            data: '',
+            url: 'https://zzzzz.serveo.net/upload', // замените на ваш URL
+            data: formData,
+            contentType: false,
+            processData: false,
             success: function (data) {
+                console.log(data);
             },
             error: function (xhr, status, error) {
                 console.log(xhr, status, error);
             }
-        })
-    };
+        });
+    }
 </script>
 
 </html>
