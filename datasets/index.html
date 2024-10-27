@@ -164,10 +164,8 @@
             <button onclick="gisto();">Гистограмма</button>
             <button onclick="krug();">Круговая диаграмма</button>
             <button onclick="stolb();">Столбчатая диаграмма</button>
-            <form method="post" action="" id="upload_file">
-                <input type="file" accept=".csv,.json" />
-                <button onclick="upload();">Загрузить файл</button>
-            </form>
+            <input id="upload_file" type="file" accept=".csv,.json" value="" />
+            <button onclick="upload();">Загрузить файл</button>
         </div>
     </div>
 </body>
@@ -387,20 +385,20 @@
         getDataFromFilters();
     });
     function upload() {
-        var formData = new FormData(document.getElementById('upload_file'));
-        $.ajax({
-            type: "POST",
-            url: 'https://zzzzz.serveo.net/upload', // замените на ваш URL
-            data: formData,
-            contentType: false,
-            processData: false,
-            success: function (data) {
-                console.log(data);
-            },
-            error: function (xhr, status, error) {
-                console.log(xhr, status, error);
+        var file = document.getElementById('upload_file').files[0];
+        var formData = new FormData();
+        formData.append('file', file);
+
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', 'https://zzzzz.serveo.net/upload', true); // заменить на адрес сервера
+        xhr.onload = function () {
+            if (xhr.status === 200) {
+                console.log('File uploaded successfully');
+            } else {
+                console.log('Error uploading file');
             }
-        });
+        };
+        xhr.send(formData);
     }
 </script>
 
