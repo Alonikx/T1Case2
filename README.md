@@ -7,7 +7,7 @@
 
 проведение туннеля через serveo.net
 
-фронт - front/datasets/index.html
+фронт - datasets/index.html
 
 
 данные с файла берутся со 2й строки 
