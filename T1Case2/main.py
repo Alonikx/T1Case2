@@ -7,7 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from data_analyze import write_json, read_json, write_json_filter
 from fastapi.responses import HTMLResponse
 import os
-
+import json
 app = FastAPI()
 
 app.add_middleware(
@@ -19,13 +19,17 @@ app.add_middleware(
 )
 
 
-# @app.post("/upload")
-# async def upload_file(file: UploadFile = File(...)):
-#     if file.filename.endswith('.csv'):
-#         contents = await file.read()
-#         data = pd.read_csv(pd.compat.StringIO(contents.decode('utf-8')))
-#         return JSONResponse(content={"message": "File uploaded successfully!"}, status_code=200)
-#     raise HTTPException(status_code=400, detail="Invalid file format!")
+@app.post("/upload")
+async def upload_file(file: UploadFile = File(...)):
+    if file.filename.endswith('.csv'):
+        contents = await file.read()
+        data = pd.read_csv(pd.compat.StringIO(contents.decode('utf-8')))
+        with open('json_files/data.json', 'w') as json_file:
+            json.dump(data.to_dict(), json_file) 
+        
+        return JSONResponse(content={"message": "File uploaded and saved as JSON successfully!"}, status_code=200)
+    
+    raise HTTPException(status_code=400, detail="Invalid file format!")
 
 
 class DataModel(BaseModel):
