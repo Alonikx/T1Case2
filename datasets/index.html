@@ -462,7 +462,7 @@
 <script>
     function ajax() {
         const coll = new XMLHttpRequest();
-        coll.open('GET', 'indexes.php');
+        coll.open('GET', 'https://zzzzz.serveo.net/indexes');
         coll.onload = function () {
             const data = JSON.parse(coll.responseText);
             const tbody = document.getElementById('tbody');
