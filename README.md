@@ -2,7 +2,7 @@
 
 
 
-включение бека back/T1case2/t1Case2 - uvicorn main:app --reload
+включение бека back/T1case2/T1Case2 - uvicorn main:app --reload
 
 
 проведение туннеля через serveo.net
