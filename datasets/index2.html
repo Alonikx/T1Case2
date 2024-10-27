@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Интерактивная Таблица</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"
+        integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.0.0-alpha.12/html2canvas.min.js"></script>
+    <script src="node_modules/docx/build/index.iife.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/docx@5.0.0/dist/docx.min.js"></script>
+    <style>
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-top: 20px;  
+        }
+
+        th,
+        td {
+            border: 1px solid #ccc;
+            padding: 8px;
+            text-align: center;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+
+        button {
+            margin-top: 10px;
+        }
+
+        body {
+            height: 100%;
+            width: 100%;
+            min-height: 95%;
+            margin: 0;
+            overflow: hidden;
+        }
+
+        .input {
+            width: 100%;
+        }
+
+        .content {
+            position: absolute;
+            width: 75%;
+            min-width: 50%;
+            max-width: 100%;
+            height: 80%;
+            min-height: 50%;
+            border: 2px solid#ddd;
+            border-radius: 10px;
+            background-color: #fcfcfc;
+            overflow-y: auto;
+            overflow-x: auto;
+            box-sizing: border-box;
+            transition: width 0.1s, height 0.1s;
+        }
+
+        .content::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+
+        .content::-webkit-scrollbar-thumb {
+            background-color: #ccc;
+            border-radius: 5px;
+        }
+
+        .content::-webkit-scrollbar-thumb:hover {
+            background-color: #aaa;
+        }
+
+        .content::-webkit-scrollbar-track {
+            background-color: #f2f2f2;
+        }
+
+        .left-handle {
+            position: sticky;
+            top: 0;
+            left: 0;
+            width: 10px;
+            height: 10px;
+            background-color: #ccc;
+            cursor: nw-resize;
+        }
+
+        .rigth-handle {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 20px;
+            height: 20px;
+            background-color: #ccc;
+            cursor: nw-resize;
+        }
+
+        .content_diagramm {
+            position: absolute;
+            right: 0;
+            top: 0;
+            width: 25%;
+            min-width: 25%;
+            max-width: 50%;
+            min-height: 50%;
+            height: 100%;
+            border: 2px solid#ddd;
+            border-radius: 10px;
+            background-color: #fcfcfc;
+            overflow-y: auto;
+            overflow-x: auto;
+            box-sizing: border-box;
+            transition: width 0.1s, height 0.1s;
+        }
+
+        .content_item {
+            width: 75%;
+            position: absolute;
+            bottom: 0;
+            height: 20%;
+            border: 2px solid#ddd;
+            border-radius: 10px;
+            background-color: #fcfcfc;
+            overflow-y: auto;
+            overflow-x: auto;
+        }
+        canvas{
+            height: auto;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="content">
+        <div class="left-handle"></div>
+        <h1>Интерактивная таблица</h1>
+        <div id="id">
+            <div class="table-scroll">
+                <table id="myTable">
+                    <thead id="thead">
+                        <tr id="header-row">
+                        </tr>
+                    </thead>
+                    <tbody id="tbody">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <!--<div class="rigth-handle"></div>-->
+    </div>
+    <div class="content_diagramm">
+        <div class="rigth-handle"></div>
+        <div id="div-column-select">
+            <select id="column-select">
+            </select>
+        </div>
+        <div id="div-chart">
+            <canvas id="myChart"></canvas>
+            <canvas id="myChartkrug"></canvas>
+            <canvas id="myChartstolb"></canvas>
+        </div>
+        <button id="button1" onclick="copyChartsAsPNG()">Click to copy</button>
+    </div>
+    <div class="content_item">
+        <div>
+            <button title="Ctrl+R" onclick="addRow()">Добавить строку</button>
+            <button title="Ctrl+C" onclick="addColumn()">Добавить столбец</button>
+            <button title="Ctrl+S" onclick="getDataFromInputs()">Сохранить</button>
+            <button title="Ctrl+Z" onclick="delete_filter();">Отчистить фильтр</button>
+            <button onclick="fixed_block();">Отформатировать</button>
+            <button onclick="gisto();">Гистограмма</button>
+            <button onclick="krug();">Круговая диаграмма</button>
+            <button onclick="stolb();">Столбчатая диаграмма</button>
+            <button onclick="todocx()">Скачать DOCX</button>
+            <form method="post" action="" id="upload_file">
+                <input type="file" accept=".csv,.json" />
+                <button onclick="upload();">Загрузить файл</button>
+            </form>
+        </div>
+    </div>
+</body>
+
+
+
+<script>
+
+async function copyChartsAsPNG() {
+    // Находим все canvas элементы в div
+    const chartDiv = document.getElementById('div-chart');
+    const canvases = chartDiv.getElementsByTagName('canvas');
+
+    // Создаем массив для хранения изображений
+    const images = [];
+
+    // Преобразуем каждый canvas в PNG
+    for (const canvas of canvases) {
+        const dataURL = canvas.toDataURL('image/png');
+        images.push(dataURL);
+    }
+
+    // Создаем временный элемент для копирования
+    const tempDiv = document.createElement('div');
+
+    // Добавляем изображения в временный элемент
+    images.forEach((imageSrc) => {
+        const img = document.createElement('img');
+        img.src = imageSrc;
+        img.style.display = 'none'; // Скрываем изображения
+        tempDiv.appendChild(img);
+    });
+
+    // Добавляем временный элемент в документ
+    document.body.appendChild(tempDiv);
+
+    // Создаем новый Canvas для объединения изображений
+    const finalCanvas = document.createElement('canvas');
+    const ctx = finalCanvas.getContext('2d');
+
+    // Устанавливаем размеры финального Canvas
+    finalCanvas.width = Math.max(...Array.from(canvases).map(canvas => canvas.width));
+    finalCanvas.height = Array.from(canvases).reduce((acc, canvas) => acc + canvas.height, 0);
+
+    // Рисуем каждое изображение на финальном Canvas
+    let offsetY = 0;
+    for (const canvas of canvases) {
+        ctx.drawImage(canvas, 0, offsetY);
+        offsetY += canvas.height;
+    }
+
+    // Получаем Data URL финального Canvas
+    const finalDataURL = finalCanvas.toDataURL('image/png');
+
+    // Копируем изображение в буфер обмена
+    try {
+        await navigator.clipboard.write([
+            new ClipboardItem({
+                'image/png': fetch(finalDataURL).then(res => res.blob())
+            })
+        ]);
+        alert('Графики скопированы в буфер обмена в формате PNG!');
+    } catch (err) {
+        console.error('Ошибка копирования в буфер обмена:', err);
+        alert('Не удалось скопировать графики в буфер обмена.');
+    }
+
+    // Удаляем временный элемент
+    document.body.removeChild(tempDiv);
+}
+
+    function stolb() {
+        const table = document.getElementById('myTable');
+        const tbody = table.tBodies[0];
+        const rows = tbody.rows;
+        const columns = [];
+
+        for (let i = 0; i < rows[0].cells.length - 1; i++) {
+            columns.push([]);
+        }
+
+        for (let i = 0; i < rows.length; i++) {
+            const input = rows[i].getElementsByTagName('input');
+            for (let j = 0; j < input.length; j++) {
+                columns[j].push(input[j].value); // Получаем значения из инпутов
+            }
+        }
+
+        const columnSelect = document.getElementById('column-select');
+        const selectedColumn = columnSelect.value;
+
+        // Удаляем предыдущую диаграмму
+        const ctx = document.getElementById('myChartstolb').getContext('2d');
+        // if (window.chart) {
+        //     window.chart.destroy();
+        // }
+
+        // Создаем диаграмму
+        window.chart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: [...new Set(columns[selectedColumn - 1])],
+                datasets: [{
+                    label: 'Столбчатая диаграмма',
+                    data: [...new Set(columns[selectedColumn - 1])].map((value) => {
+                        return columns[selectedColumn - 1].filter((item) => item === value).length;
+                    }),
+                    backgroundColor: [
+                        'rgba(255, 99, 132, 0.2)',
+                        'rgba(54, 162, 235, 0.2)',
+                        'rgba(255, 206, 86, 0.2)',
+                        'rgba(75, 192, 192, 0.2)',
+                        'rgba(153, 102, 255, 0.2)',
+                        'rgba(255, 159, 64, 0.2)'
+                    ],
+                    borderColor: [
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(153, 102, 255, 1)',
+                        'rgba(255, 159, 64, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    x: {
+                        ticks: {
+                            maxRotation: 70,
+                            minRotation: 70
+                        }
+                    },
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    }
+
+
+
+
+    function krug() {
+        const table = document.getElementById('myTable');
+        const tbody = table.tBodies[0];
+        const rows = tbody.rows;
+        const columns = [];
+
+        for (let i = 0; i < rows[0].cells.length - 1; i++) {
+            columns.push([]);
+        }
+
+        for (let i = 0; i < rows.length; i++) {
+            const input = rows[i].getElementsByTagName('input');
+            for (let j = 0; j < input.length; j++) {
+                columns[j].push(input[j].value); // Получаем значения из инпутов
+            }
+        }
+
+        const columnSelect = document.getElementById('column-select');
+        const selectedColumn = columnSelect.value;
+
+        // Удаляем предыдущую диаграмму
+        const ctx = document.getElementById('myChartkrug').getContext('2d');
+        // if (window.chart) {
+        //     window.chart.destroy();
+        // }
+
+        // Создаем диаграмму
+        window.chart = new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: [...new Set(columns[selectedColumn - 1])],
+                datasets: [{
+                    label: 'Круговая диаграмма',
+                    data: [...new Set(columns[selectedColumn - 1])].map((value) => {
+                        return columns[selectedColumn - 1].filter((item) => item === value).length;
+                    }),
+                    backgroundColor: [
+                        'rgba(255, 99, 132, 0.2)',
+                        'rgba(54, 162, 235, 0.2)',
+                        'rgba(255, 206, 86, 0.2)',
+                        'rgba(75, 192, 192, 0.2)',
+                        'rgba(153, 102, 255, 0.2)',
+                        'rgba(255, 159, 64, 0.2)'
+                    ],
+                    borderColor: [
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(153, 102, 255, 1)',
+                        'rgba(255, 159, 64, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    }
+    function gisto() {
+        const table = document.getElementById('myTable');
+        const tbody = table.tBodies[0];
+        const rows = tbody.rows;
+        const columns = [];
+
+        for (let i = 0; i < rows[0].cells.length - 1; i++) {
+            columns.push([]);
+        }
+
+        for (let i = 0; i < rows.length; i++) {
+            const input = rows[i].getElementsByTagName('input');
+            for (let j = 0; j < input.length; j++) {
+                columns[j].push(input[j].value); // Получаем значения из инпутов
+            }
+        }
+
+        const columnSelect = document.getElementById('column-select');
+        const selectedColumn = columnSelect.value;
+
+        // Удаляем предыдущую гистограмму
+        const ctx = document.getElementById('myChart').getContext('2d');
+        // if (window.chart) {
+        //     window.chart.destroy();
+        // }
+
+        // Создаем гистограмму
+        window.chart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: [...new Set(columns[selectedColumn - 1])],
+                datasets: [{
+                    label: 'Гистограмма',
+                    data: [...new Set(columns[selectedColumn - 1])].map((value) => {
+                        return columns[selectedColumn - 1].filter((item) => item === value).length;
+                    }),
+                    backgroundColor: [
+                        'rgba(255, 99, 132, 0.2)',
+                        'rgba(54, 162, 235, 0.2)',
+                        'rgba(255, 206, 86, 0.2)',
+                        'rgba(75, 192, 192, 0.2)',
+                        'rgba(153, 102, 255, 0.2)',
+                        'rgba(255, 159, 64, 0.2)'
+                    ],
+                    borderColor: [
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(153, 102, 255, 1)',
+                        'rgba(255, 159, 64, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    x: {
+                        ticks: {
+                            maxRotation: 70,
+                            minRotation: 70
+                        }
+                    },
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    }
+
+</script>
+<script>
+    let scriptEnabled = false;
+    function fixed_block() {
+        console.log(scriptEnabled);
+        scriptEnabled = !scriptEnabled;
+        if (scriptEnabled) {
+            const content_item = document.querySelector('.content_item');
+
+            content_item.addEventListener('mousedown', (e) => {
+                const rect = content_item.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+
+                const moveHandler = (e) => {
+                    const newX = e.clientX - x;
+                    const newY = e.clientY - y;
+                    content_item.style.top = `${newY}px`;
+                    content_item.style.left = `${newX}px`;
+                };
+
+                const upHandler = () => {
+                    document.removeEventListener('mousemove', moveHandler);
+                    document.removeEventListener('mouseup', upHandler);
+                };
+
+                document.addEventListener('mousemove', moveHandler);
+                document.addEventListener('mouseup', upHandler);
+            });
+            const content_diagramm = document.querySelector('.content_diagramm');
+
+            content_diagramm.addEventListener('mousedown', (e) => {
+                const rect = content_diagramm.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+
+                const moveHandler = (e) => {
+                    const newX = e.clientX - x;
+                    const newY = e.clientY - y;
+                    content_diagramm.style.top = `${newY}px`;
+                    content_diagramm.style.left = `${newX}px`;
+                };
+
+                const upHandler = () => {
+                    document.removeEventListener('mousemove', moveHandler);
+                    document.removeEventListener('mouseup', upHandler);
+                };
+
+                document.addEventListener('mousemove', moveHandler);
+                document.addEventListener('mouseup', upHandler);
+            });
+            const resizeHandles = document.querySelector('.rigth-handle');
+            let isResizings = false;
+            let startXs = 0;
+            let startYs = 0;
+            let startWidths = 0;
+            let startHeights = 0;
+
+            resizeHandles.addEventListener('mousedown', (e) => {
+                isResizings = true;
+                startXs = e.clientX;
+                startYs = e.clientY;
+                startWidths = content_diagramm.offsetWidth;
+                startHeights = content_diagramm.offsetHeight;
+            });
+
+            document.addEventListener('mousemove', (e) => {
+                if (isResizings) {
+                    const newWidth = startWidths + (e.clientX - startXs);
+                    const newHeight = startHeights + (startYs - e.clientY);
+                    content_diagramm.style.width = `${newWidth}px`;
+                    content_diagramm.style.height = `${newHeight}px`;
+                }
+            });
+
+            document.addEventListener('mouseup', () => {
+                isResizings = false;
+            });
+
+            const content = document.querySelector('.content');
+
+            content.addEventListener('mousedown', (e) => {
+                const rect = content.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+
+                const moveHandler = (e) => {
+                    const newX = e.clientX - x;
+                    const newY = e.clientY - y;
+                    content.style.top = `${newY}px`;
+                    content.style.left = `${newX}px`;
+                };
+
+                const upHandler = () => {
+                    document.removeEventListener('mousemove', moveHandler);
+                    document.removeEventListener('mouseup', upHandler);
+                };
+
+                document.addEventListener('mousemove', moveHandler);
+                document.addEventListener('mouseup', upHandler);
+            });
+            const resizeHandle = document.querySelector('.left-handle');
+            let isResizing = false;
+            let startX = 0;
+            let startY = 0;
+            let startWidth = 0;
+            let startHeight = 0;
+
+            resizeHandle.addEventListener('mousedown', (e) => {
+                isResizing = true;
+                startX = e.clientX;
+                startY = e.clientY;
+                startWidth = content.offsetWidth;
+                startHeight = content.offsetHeight;
+            });
+
+            document.addEventListener('mousemove', (e) => {
+                if (isResizing) {
+                    const newWidth = startWidth + (startX - e.clientX);
+                    const newHeight = startHeight + (startY - e.clientY);
+                    content.style.width = `${newWidth}px`;
+                    content.style.height = `${newHeight}px`;
+                }
+            });
+
+            document.addEventListener('mouseup', () => {
+                isResizing = false;
+            });
+        } else {
+            const content_item = document.querySelector('.content_item');
+            content_item.removeEventListener('mousedown', () => { });
+
+            const content_diagramm = document.querySelector('.content_diagramm');
+            content_diagramm.removeEventListener('mousedown', () => { });
+
+            const resizeHandles = document.querySelector('.rigth-handle');
+            resizeHandles.removeEventListener('mousedown', () => { });
+
+            const content = document.querySelector('.content');
+            content.removeEventListener('mousedown', () => { });
+
+            const resizeHandle = document.querySelector('.left-handle');
+            resizeHandle.removeEventListener('mousedown', () => { });
+
+            document.removeEventListener('mousemove', () => { });
+            document.removeEventListener('mouseup', () => { });
+        }
+    }
+
+</script>
+<script type="text/javascript" src="main.js"></script>
+<script>
+    function ajax() {
+        const coll = new XMLHttpRequest();
+        coll.open('GET', 'indexes.php');
+        coll.onload = function () {
+            const data = JSON.parse(coll.responseText);
+            const tbody = document.getElementById('tbody');
+            tbody.innerHTML = '';
+            const headerRow = document.getElementById('header-row');
+            headerRow.innerHTML = '';
+            const emptyCell = document.createElement('th');
+            emptyCell.style.border = 'none';
+            emptyCell.style.background = '#ffffff';
+            headerRow.appendChild(emptyCell);
+            var int = 0;
+            data.forEach(function (item) {
+                const cell = document.createElement('th');
+                cell.innerHTML = `<button style="background:none;border:none" onclick="deleteColumn(this)"><img src="./close.svg" width="16px" heigth="16px"/></button><input type="text" class="${int}" placeholder="Поиск имен.." form="false">`;
+                headerRow.appendChild(cell);
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.className = `input`; // передача класса через метод classList
+                input.value = item;
+                cell.appendChild(input);
+                int++;
+            });
+        };
+        try {
+            coll.send();    
+        } catch (e) {
+            console.log(e);
+        }
+    }
+    ajax();
+    function ajax_value() {
+        const date = new XMLHttpRequest();
+        date.open('GET', 'values.php');
+        date.onload = function () {
+            const dates = JSON.parse(date.responseText);
+            const tbody = document.getElementById('tbody');
+            tbody.innerHTML = '';
+            var i = 0;
+            dates.forEach(function (items) {
+                const row = document.createElement('tr');
+                tbody.appendChild(row);
+                const emptyrow = document.createElement('td');
+                emptyrow.innerHTML = `<button onclick="deleteRow(this)">Удалить строку</button>`;
+                row.appendChild(emptyrow);
+                var r = 0;
+                items.forEach(function (item) {
+                    const rows = document.createElement('td');
+                    rows.innerHTML = `<input type='text' form='form' name='${r}' value='${item}'/>`;
+                    row.appendChild(rows);
+                    r++;
+                });
+                i++;
+            });
+        };
+        try {
+            date.send();
+        } catch (e) {
+            console.log(e);
+        }
+    }
+    ajax_value();
+    function getDataFromInputs() {
+        const tbody = document.getElementById('tbody');
+        const rows = tbody.children;
+        const dataList = [];
+
+        for (let i = 0; i < rows.length; i++) {
+            const inputs = rows[i].getElementsByTagName('input');
+            const rowData = [];
+
+            for (let j = 0; j < inputs.length; j++) {
+                rowData.push(inputs[j].value); // Получаем значения из инпутов
+            }
+
+            dataList.push(rowData); // Добавляем данные строки в общий список
+        }
+        const thead = document.getElementById('thead');
+        const row = thead.children;
+        const rowDat = [];
+        const columnSelect = document.getElementById('column-select');
+        columnSelect.innerHTML = '';
+
+        for (let i = 0; i < row.length; i++) {
+            const input = row[i].getElementsByClassName('input');
+            for (let j = 0; j < input.length; j++) {
+                const value = input[j].value;
+                rowDat.push(value); // Получаем значения из инпутов
+                const option = document.createElement('option');
+                option.value = j + 1;
+                option.textContent = value;
+                columnSelect.appendChild(option);
+            }
+        }
+
+        $.ajax({
+            type: "POST",
+            url: 'https://zzzzz.serveo.net/submit',
+            contentType: 'application/json',
+            data: JSON.stringify({
+                'columns': rowDat,
+                'values': dataList
+            }),
+            success: function (data) {
+                console.log(data);
+            },
+            error: function (xhr, status, error) {
+                console.log(xhr, status, error);
+            }
+
+        });
+    }
+    window.addEventListener('keydown', function (event) {
+        if (event.ctrlKey && (event.key === 's' || event.key === 'ы' || event.key === 'Ы' || event.key === 'S')) {
+            event.preventDefault();
+            getDataFromInputs();
+        }
+    });
+    function getDataFromFilters() {
+        const tbody_filter = document.getElementById('tbody');
+        const rows_filter = tbody_filter.children;
+        const dataList_filter = [];
+
+        for (let i = 0; i < rows_filter.length; i++) {
+            const row = rows_filter[i];
+            console.log(row.style.display != 'none')
+            if (row.style.display != 'none') { // Проверяем, пустой ли стиль строки
+                const inputs_filter = row.getElementsByTagName('input');
+                const rowData_filter = [];
+
+                for (let j = 0; j < inputs_filter.length; j++) {
+                    rowData_filter.push(inputs_filter[j].value); // Получаем значения из инпутов
+                }
+
+                if (rowData_filter.length > 0) { // Проверяем, есть ли данные в строке
+                    dataList_filter.push(rowData_filter); // Добавляем данные строки в общий список
+                }
+            }
+        }
+        const thead_filter = document.getElementById('thead');
+        const row_filter = thead_filter.children;
+        const rowDat_filter = [];
+
+        for (let i = 0; i < row_filter.length; i++) {
+            const input_filter = row_filter[i].getElementsByClassName('input');
+            for (let j = 0; j < input_filter.length; j++) {
+                rowDat_filter.push(input_filter[j].value); // Получаем значения из инпутов
+            }
+        }
+        $.ajax({
+            type: "POST",
+            url: 'https://zzzzz.serveo.net/filter',
+            contentType: 'application/json',
+            data: JSON.stringify({
+                'columns': rowDat_filter,
+                'values': dataList_filter
+            }),
+            success: function (data) {
+                console.log(data);
+            },
+            error: function (xhr, status, error) {
+                console.log(xhr, status, error);
+            }
+
+        });
+    }
+    function delete_filter() {
+        ajax(); ajax_value();
+        $.ajax({
+            type: "POST",
+            url: 'https://zzzzz.serveo.net/delete_filter',
+            data: '',
+            success: function (data) {
+            },
+            error: function (xhr, status, error) {
+                console.log(xhr, status, error);
+            }
+        })
+    }
+    window.addEventListener('keydown', function (event) {
+        if (event.ctrlKey && (event.key === 'z' || event.key === 'я')) {
+            event.preventDefault();
+            delete_filter();
+        }
+    });
+
+    table = document.getElementById('thead');
+    table.addEventListener('keyup', function (e) {
+        let target = e.target;
+        input = document.getElementsByClassName(target.className)[0];
+        filter = input.value.toUpperCase();
+        if (target.tagName == "INPUT") {
+            let num = +target.className;
+            tables = document.getElementById('tbody');
+            tr = tables.getElementsByTagName("tr");
+            for (i = 0; i < tr.length; i++) {
+                td = tr[i].getElementsByTagName("td")[num + 1];
+                if (td) {
+                    input = td.getElementsByTagName('input')[0].value;
+                    console.log(input);
+                    if (input.toUpperCase().indexOf(filter) > -1) {
+                        tr[i].style.display = "";
+                    } else {
+                        tr[i].style.display = "none";
+                    }
+                }
+            }
+        }
+        getDataFromFilters();
+    });
+    function upload() {
+        var input_file = document.getElementById("upload_file");
+        console.log(input_file)
+        $.ajax({
+            type: "POST",
+            url: '',
+            data: '',
+            success: function (data) {
+            },
+            error: function (xhr, status, error) {
+                console.log(xhr, status, error);
+            }
+        })
+    };
+</script>
+
+</html>
