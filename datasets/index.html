@@ -90,8 +90,8 @@
             position: absolute;
             top: 0;
             right: 0;
-            width: 10px;
-            height: 10px;
+            width: 20px;
+            height: 20px;
             background-color: #ccc;
             cursor: nw-resize;
         }
@@ -104,7 +104,7 @@
             min-width: 25%;
             max-width: 50%;
             min-height: 50%;
-            height: 80%;
+            height: 100%;
             border: 2px solid#ddd;
             border-radius: 10px;
             background-color: #fcfcfc;
@@ -115,7 +115,7 @@
         }
 
         .content_item {
-            width: 100%;
+            width: 75%;
             position: absolute;
             bottom: 0;
             height: 20%;
@@ -124,6 +124,10 @@
             background-color: #fcfcfc;
             overflow-y: auto;
             overflow-x: auto;
+        }
+
+        canvas {
+            height: auto;
         }
     </style>
 </head>
@@ -148,11 +152,16 @@
     </div>
     <div class="content_diagramm">
         <div class="rigth-handle"></div>
-        <select id="column-select">
-        </select>
-        <canvas id="myChart"></canvas>
-        <canvas id="myChartkrug"></canvas>
-        <canvas id="myChartstolb"></canvas>
+        <div id="div-column-select">
+            <select id="column-select">
+            </select>
+        </div>
+        <div id="div-chart">
+            <canvas id="myChart"></canvas>
+            <canvas id="myChartkrug"></canvas>
+            <canvas id="myChartstolb"></canvas>
+        </div>
+        <button id="button1" onclick="copyChartsAsPNG()">Click to copy</button>
     </div>
     <div class="content_item">
         <div>
@@ -164,12 +173,290 @@
             <button onclick="gisto();">Гистограмма</button>
             <button onclick="krug();">Круговая диаграмма</button>
             <button onclick="stolb();">Столбчатая диаграмма</button>
-            <input id="upload_file" type="file" accept=".csv,.json" value="" />
-            <button onclick="upload();">Загрузить файл</button>
+            <form method="post" action="" id="upload_file">
+                <input type="file" accept=".csv,.json" />
+                <button onclick="upload();">Загрузить файл</button>
+            </form>
         </div>
     </div>
 </body>
-<script type="text/javascript" src="diagramms.js"></script>
+
+
+
+<script>
+    async function copyChartsAsPNG() {
+        // Находим все canvas элементы в div
+        const chartDiv = document.getElementById('div-chart');
+        const canvases = chartDiv.getElementsByTagName('canvas');
+
+        // Создаем массив для хранения изображений
+        const images = [];
+
+        // Преобразуем каждый canvas в PNG
+        for (const canvas of canvases) {
+            const dataURL = canvas.toDataURL('image/png');
+            images.push(dataURL);
+        }
+
+        // Создаем временный элемент для копирования
+        const tempDiv = document.createElement('div');
+
+        // Добавляем изображения в временный элемент
+        images.forEach((imageSrc) => {
+            const img = document.createElement('img');
+            img.src = imageSrc;
+            img.style.display = 'none'; // Скрываем изображения
+            tempDiv.appendChild(img);
+        });
+
+        // Добавляем временный элемент в документ
+        document.body.appendChild(tempDiv);
+
+        // Создаем новый Canvas для объединения изображений
+        const finalCanvas = document.createElement('canvas');
+        const ctx = finalCanvas.getContext('2d');
+
+        // Устанавливаем размеры финального Canvas
+        finalCanvas.width = Math.max(...Array.from(canvases).map(canvas => canvas.width));
+        finalCanvas.height = Array.from(canvases).reduce((acc, canvas) => acc + canvas.height, 0);
+
+        // Рисуем каждое изображение на финальном Canvas
+        let offsetY = 0;
+        for (const canvas of canvases) {
+            ctx.drawImage(canvas, 0, offsetY);
+            offsetY += canvas.height;
+        }
+
+        // Получаем Data URL финального Canvas
+        const finalDataURL = finalCanvas.toDataURL('image/png');
+
+        // Копируем изображение в буфер обмена
+        try {
+            await navigator.clipboard.write([
+                new ClipboardItem({
+                    'image/png': fetch(finalDataURL).then(res => res.blob())
+                })
+            ]);
+            alert('Графики скопированы в буфер обмена в формате PNG!');
+        } catch (err) {
+            console.error('Ошибка копирования в буфер обмена:', err);
+            alert('Не удалось скопировать графики в буфер обмена.');
+        }
+
+        // Удаляем временный элемент
+        document.body.removeChild(tempDiv);
+    }
+
+    function stolb() {
+        const table = document.getElementById('myTable');
+        const tbody = table.tBodies[0];
+        const rows = tbody.rows;
+        const columns = [];
+
+        for (let i = 0; i < rows[0].cells.length - 1; i++) {
+            columns.push([]);
+        }
+
+        for (let i = 0; i < rows.length; i++) {
+            const input = rows[i].getElementsByTagName('input');
+            for (let j = 0; j < input.length; j++) {
+                columns[j].push(input[j].value); // Получаем значения из инпутов
+            }
+        }
+
+        const columnSelect = document.getElementById('column-select');
+        const selectedColumn = columnSelect.value;
+
+        // Удаляем предыдущую диаграмму
+        const ctx = document.getElementById('myChartstolb').getContext('2d');
+        // if (window.chart) {
+        //     window.chart.destroy();
+        // }
+
+        // Создаем диаграмму
+        window.chart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: [...new Set(columns[selectedColumn - 1])],
+                datasets: [{
+                    label: 'Столбчатая диаграмма',
+                    data: [...new Set(columns[selectedColumn - 1])].map((value) => {
+                        return columns[selectedColumn - 1].filter((item) => item === value).length;
+                    }),
+                    backgroundColor: [
+                        'rgba(255, 99, 132, 0.2)',
+                        'rgba(54, 162, 235, 0.2)',
+                        'rgba(255, 206, 86, 0.2)',
+                        'rgba(75, 192, 192, 0.2)',
+                        'rgba(153, 102, 255, 0.2)',
+                        'rgba(255, 159, 64, 0.2)'
+                    ],
+                    borderColor: [
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(153, 102, 255, 1)',
+                        'rgba(255, 159, 64, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    x: {
+                        ticks: {
+                            maxRotation: 70,
+                            minRotation: 70
+                        }
+                    },
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    }
+
+
+
+
+    function krug() {
+        const table = document.getElementById('myTable');
+        const tbody = table.tBodies[0];
+        const rows = tbody.rows;
+        const columns = [];
+
+        for (let i = 0; i < rows[0].cells.length - 1; i++) {
+            columns.push([]);
+        }
+
+        for (let i = 0; i < rows.length; i++) {
+            const input = rows[i].getElementsByTagName('input');
+            for (let j = 0; j < input.length; j++) {
+                columns[j].push(input[j].value); // Получаем значения из инпутов
+            }
+        }
+
+        const columnSelect = document.getElementById('column-select');
+        const selectedColumn = columnSelect.value;
+
+        // Удаляем предыдущую диаграмму
+        const ctx = document.getElementById('myChartkrug').getContext('2d');
+        // if (window.chart) {
+        //     window.chart.destroy();
+        // }
+
+        // Создаем диаграмму
+        window.chart = new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: [...new Set(columns[selectedColumn - 1])],
+                datasets: [{
+                    label: 'Круговая диаграмма',
+                    data: [...new Set(columns[selectedColumn - 1])].map((value) => {
+                        return columns[selectedColumn - 1].filter((item) => item === value).length;
+                    }),
+                    backgroundColor: [
+                        'rgba(255, 99, 132, 0.2)',
+                        'rgba(54, 162, 235, 0.2)',
+                        'rgba(255, 206, 86, 0.2)',
+                        'rgba(75, 192, 192, 0.2)',
+                        'rgba(153, 102, 255, 0.2)',
+                        'rgba(255, 159, 64, 0.2)'
+                    ],
+                    borderColor: [
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(153, 102, 255, 1)',
+                        'rgba(255, 159, 64, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    }
+    function gisto() {
+        const table = document.getElementById('myTable');
+        const tbody = table.tBodies[0];
+        const rows = tbody.rows;
+        const columns = [];
+
+        for (let i = 0; i < rows[0].cells.length - 1; i++) {
+            columns.push([]);
+        }
+
+        for (let i = 0; i < rows.length; i++) {
+            const input = rows[i].getElementsByTagName('input');
+            for (let j = 0; j < input.length; j++) {
+                columns[j].push(input[j].value); // Получаем значения из инпутов
+            }
+        }
+
+        const columnSelect = document.getElementById('column-select');
+        const selectedColumn = columnSelect.value;
+
+        // Удаляем предыдущую гистограмму
+        const ctx = document.getElementById('myChart').getContext('2d');
+        // if (window.chart) {
+        //     window.chart.destroy();
+        // }
+
+        // Создаем гистограмму
+        window.chart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: [...new Set(columns[selectedColumn - 1])],
+                datasets: [{
+                    label: 'Гистограмма',
+                    data: [...new Set(columns[selectedColumn - 1])].map((value) => {
+                        return columns[selectedColumn - 1].filter((item) => item === value).length;
+                    }),
+                    backgroundColor: [
+                        'rgba(255, 99, 132, 0.2)',
+                        'rgba(54, 162, 235, 0.2)',
+                        'rgba(255, 206, 86, 0.2)',
+                        'rgba(75, 192, 192, 0.2)',
+                        'rgba(153, 102, 255, 0.2)',
+                        'rgba(255, 159, 64, 0.2)'
+                    ],
+                    borderColor: [
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(153, 102, 255, 1)',
+                        'rgba(255, 159, 64, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    x: {
+                        ticks: {
+                            maxRotation: 70,
+                            minRotation: 70
+                        }
+                    },
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    }
+
+</script>
 <script type="text/javascript" src="item_page.js"></script>
 <script type="text/javascript" src="main.js"></script>
 <script>
@@ -189,11 +476,14 @@
             var int = 0;
             data.forEach(function (item) {
                 const cell = document.createElement('th');
-                cell.innerHTML = `<button style="background:none;border:none" onclick="deleteColumn(this)"><img src="./close.svg" width="16px" heigth="16px"/></button><input type="text" class="${int}" placeholder="Поиск имен.." form="false">`;
+                cell.innerHTML = "";
                 headerRow.appendChild(cell);
+                const cells = document.createElement('td');
+                cells.innerHTML = `<button style="background:none;border:none" onclick="deleteColumn(this)"><img src="./close.svg" width="16px" heigth="16px"/></button><input type="text" class="ints" placeholder="Поиск имен.." form="false">`;
+                cell.appendChild(cells);
                 const input = document.createElement('input');
                 input.type = 'text';
-                input.className = `input`;
+                input.className = `input`; // передача класса через метод classList
                 input.value = item;
                 cell.appendChild(input);
                 int++;
@@ -208,7 +498,7 @@
     ajax();
     function ajax_value() {
         const date = new XMLHttpRequest();
-        date.open('GET', 'values.php');
+        date.open('GET', 'https://zzzzz.serveo.net/values');
         date.onload = function () {
             const dates = JSON.parse(date.responseText);
             const tbody = document.getElementById('tbody');
@@ -247,9 +537,10 @@
             const rowData = [];
 
             for (let j = 0; j < inputs.length; j++) {
-                rowData.push(inputs[j].value);
+                rowData.push(inputs[j].value); // Получаем значения из инпутов
             }
 
+            dataList.push(rowData); // Добавляем данные строки в общий список
         }
         const thead = document.getElementById('thead');
         const row = thead.children;
@@ -261,7 +552,7 @@
             const input = row[i].getElementsByClassName('input');
             for (let j = 0; j < input.length; j++) {
                 const value = input[j].value;
-                rowDat.push(value);
+                rowDat.push(value); // Получаем значения из инпутов
                 const option = document.createElement('option');
                 option.value = j + 1;
                 option.textContent = value;
@@ -300,16 +591,16 @@
         for (let i = 0; i < rows_filter.length; i++) {
             const row = rows_filter[i];
             console.log(row.style.display != 'none')
-            if (row.style.display != 'none') {
+            if (row.style.display != 'none') { // Проверяем, пустой ли стиль строки
                 const inputs_filter = row.getElementsByTagName('input');
                 const rowData_filter = [];
 
                 for (let j = 0; j < inputs_filter.length; j++) {
-                    rowData_filter.push(inputs_filter[j].value);
+                    rowData_filter.push(inputs_filter[j].value); // Получаем значения из инпутов
                 }
 
-                if (rowData_filter.length > 0) {
-                    dataList_filter.push(rowData_filter);
+                if (rowData_filter.length > 0) { // Проверяем, есть ли данные в строке
+                    dataList_filter.push(rowData_filter); // Добавляем данные строки в общий список
                 }
             }
         }
